@@ -1,4 +1,13 @@
+#list of packages required
+list.of.packages <- c("dplyr","shiny", "readr", "withr", "tibble", "stringr")
+
+#checking missing packages from list
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+
+#install missing ones
+if(length(new.packages)) install.packages(new.packages, dependencies = TRUE)
 library(shiny)
+
 
 # Define UI for data upload app ----
 ui <- fluidPage(
