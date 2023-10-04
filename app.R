@@ -5,7 +5,7 @@ list.of.packages <- c("dplyr","shiny", "readr", "withr", "tibble", "stringr", "D
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 
 #install missing ones
-if(length(new.packages)) install.packages(new.packages, dependencies = TRUE)
+if(length(new.packages) & interactive()) install.packages(new.packages, dependencies = TRUE)
 library(shiny)
 library(DT)
 
