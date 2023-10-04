@@ -16,7 +16,7 @@ To upload unassigned tasks download the tasks from the Wildtrax system directly 
 
 ![Screenshot from WildTrax showing how to download and upload tasks](img/WildTrax_Manage.png){width="223"}
 
-On the application, you can either enter the hours and names manually or upload a csv template (attached here). The names have to match those in the Wildtrax system. Once entered or uploaded, you can edit a cell by double clicking on the cell.
+On the application, you can either enter the hours and names manually or upload a [csv template](https://github.com/dhope/Shiny_select/blob/main/data/InterpreterHours_Template.csv). The names have to match those in the Wildtrax system. Once entered or uploaded, you can edit a cell by double clicking on the cell.
 
 ![Screenshot of shiny app showing how you can edit the cells](img/App_ScreenShot.PNG) It should update the values in the Assigned Hours tab. Double check the "Hours entered" values match what you expect.
 
