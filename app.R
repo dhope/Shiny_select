@@ -1,5 +1,5 @@
 #list of packages required
-list.of.packages <- c("dplyr","shiny", "readr", "withr", "tibble", "stringr")
+list.of.packages <- c("dplyr","shiny", "readr", "withr", "tibble", "stringr", "DT")
 
 #checking missing packages from list
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
@@ -7,6 +7,7 @@ new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"
 #install missing ones
 if(length(new.packages)) install.packages(new.packages, dependencies = TRUE)
 library(shiny)
+library(DT)
 
 
 # Define UI for data upload app ----
@@ -86,7 +87,7 @@ ui <- fluidPage(
       # tableOutput("contents"),
       
       tabsetPanel(
-        tabPanel("Interpreter Hours", tableOutput(outputId = "table")),
+        tabPanel("Interpreter Hours", DTOutput(outputId = "table")),
         tabPanel("Assigned Hours", tableOutput(outputId = "summary"))
         # tabPanel("Uploaded File", tableOutput("contents"))
         )
@@ -196,15 +197,19 @@ server <- function(input, output) {
                      hrs = as.numeric(input$hrs))) 
   })
   
+  observeEvent(input$cell_edit, {
+    rv$df <<- DT::editData(rv$df, input$cell_edit, 'table', rownames = FALSE)
+  })
+  
   table_df <- reactive({
     rv$df |> 
       dplyr::filter(!is.na(hrs)) |> 
       dplyr::mutate(phrs = hrs/sum(hrs))
   })
   
-  output$table<-renderTable({
+  output$table<-renderDT({
     rv$df  
-  })
+  }, server = T, selection="none",editable = T)
   
   download_dataset <- reactive({
     uploaded_file()|> 
