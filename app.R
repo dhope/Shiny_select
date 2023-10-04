@@ -151,7 +151,7 @@ server <- function(input, output) {
     
     
   })
-  output$contents <- renderDataTable(uploaded_file())
+  # output$contents <- renderDataTable(uploaded_file())
   
  assigned_tasks <- reactive(
     withr::with_seed(input$randomseed,{
@@ -166,6 +166,20 @@ server <- function(input, output) {
     })
     
   )
+ table_df <- reactive({
+   rv$df |> 
+     dplyr::filter(!is.na(hrs)) |> 
+     dplyr::mutate(phrs = hrs/sum(hrs))
+ })
+ 
+ 
+ 
+ download_dataset <- reactive({
+   uploaded_file()|> 
+     dplyr::filter(transcriber!="Not Assigned") |> 
+     dplyr::bind_rows(assigned_tasks())
+ }
+ )
   
   # Downloadable csv of selected dataset ----
   output$downloadData <- downloadHandler(
@@ -176,6 +190,9 @@ server <- function(input, output) {
      readr::write_csv(download_dataset(), file)
     }
   )
+ output$table<-renderDT({
+   rv$df  
+ }, server = T, selection="none",editable = T, rownames = FALSE)
   
   rv <- reactiveValues(
     df = data.frame(
@@ -183,6 +200,20 @@ server <- function(input, output) {
       hrs = as.numeric(character())
     )
   )
+  output$summary <- renderTable({
+    assigned_tasks() |> 
+      dplyr::summarize(hrs_assigned = sum(as.numeric(taskLength))/60/60, .by = transcriber) |> 
+      dplyr::left_join(table_df(),
+                       by = dplyr::join_by(transcriber)) |> 
+      dplyr::select(Transcriber = transcriber, `Hours entered` = hrs, `Hours assigned` = hrs_assigned,
+                    `Proportion entered` = phrs) |> 
+      dplyr::mutate(
+        `Prortion given` = `Hours assigned`/sum(`Hours assigned`),
+        `Remaining hours` = `Hours entered`-`Hours assigned`) 
+  })
+  
+  
+  
   
   observeEvent(input$file2,
                rv$df <- rbind(rv$df, 
@@ -197,38 +228,11 @@ server <- function(input, output) {
                      hrs = as.numeric(input$hrs))) 
   })
   
-  observeEvent(input$cell_edit, {
-    rv$df <<- DT::editData(rv$df, input$cell_edit, 'table', rownames = FALSE)
+  observeEvent(input$table_cell_edit, {
+    rv$df <<- DT::editData(rv$df, input$table_cell_edit, 'table', rownames = FALSE)
   })
   
-  table_df <- reactive({
-    rv$df |> 
-      dplyr::filter(!is.na(hrs)) |> 
-      dplyr::mutate(phrs = hrs/sum(hrs))
-  })
   
-  output$table<-renderDT({
-    rv$df  
-  }, server = T, selection="none",editable = T)
-  
-  download_dataset <- reactive({
-    uploaded_file()|> 
-      dplyr::filter(transcriber!="Not Assigned") |> 
-      dplyr::bind_rows(assigned_tasks())
-  }
-  )
-  
-  output$summary <- renderTable({
-    assigned_tasks() |> 
-      dplyr::summarize(hrs_assigned = sum(as.numeric(taskLength))/60/60, .by = transcriber) |> 
-      dplyr::left_join(table_df(),
-                       by = dplyr::join_by(transcriber)) |> 
-      dplyr::select(Transcriber = transcriber, `Hours entered` = hrs, `Hours assigned` = hrs_assigned,
-                    `Proportion entered` = phrs) |> 
-      dplyr::mutate(
-        `Prortion given` = `Hours assigned`/sum(`Hours assigned`),
-        `Remaining hours` = `Hours entered`-`Hours assigned`) 
-  })
   
 }
 
